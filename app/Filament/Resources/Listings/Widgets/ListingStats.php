@@ -23,6 +23,10 @@ class ListingStats extends StatsOverviewWidget
             ->map(function (array $criteria, string $label) {
                 $query = Listing::query()
                     ->whereNull('removed_at')
+                    ->where(function ($q) {
+                        $q->whereNull('availability')
+                            ->orWhere('availability', 'AVAILABLE');
+                    })
                     ->where('make', $criteria['make']);
 
                 if (isset($criteria['model'])) {

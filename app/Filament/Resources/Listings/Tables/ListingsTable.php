@@ -38,16 +38,58 @@ class ListingsTable
                     ->wrap()
                     ->description(fn ($record) => trim(($record->year ? $record->year . ' · ' : '') . ($record->color ?? '')) ?: null),
 
+                TextColumn::make('source')
+                    ->label('Kilde')
+                    ->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'bmcleasing' => 'warning',
+                        'ayvens' => 'info',
+                        'oscar' => 'success',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                        'bmcleasing' => 'BMC',
+                        'ayvens' => 'Ayvens',
+                        'oscar' => 'Oscar',
+                        default => $state,
+                    }),
+
                 TextColumn::make('availability')
                     ->label('Status')
                     ->badge()
-                    ->color(fn (?string $state) => $state === 'AVAILABLE' ? 'success' : 'gray')
-                    ->formatStateUsing(fn (?string $state) => match ($state) {
+                    ->color(fn (?string $state) => match ($state) {
+                        'AVAILABLE' => 'success',
+                        'UPCOMING' => 'warning',
+                        default => 'gray',
+                    })
+                    ->formatStateUsing(fn (?string $state, $record) => match ($state) {
                         'AVAILABLE' => 'Tilgængelig',
+                        'UPCOMING' => $record->available_from
+                            ? 'Ledig ' . $record->available_from->translatedFormat('j. M Y')
+                            : 'Kommende',
                         'OUT_OF_STOCK' => 'Udsolgt',
                         default => $state,
                     })
                     ->toggleable(),
+
+                TextColumn::make('available_from')
+                    ->label('Ledig fra')
+                    ->formatStateUsing(fn ($state) => $state
+                        ? \Illuminate\Support\Carbon::parse($state)->translatedFormat('j. M Y')
+                        : null)
+                    ->placeholder('—')
+                    ->sortable()
+                    ->toggleable(),
+
+                TextColumn::make('monthly_price')
+                    ->label('Pris/md')
+                    ->formatStateUsing(fn ($state) => $state
+                        ? number_format((int) $state, 0, ',', '.') . ' kr'
+                        : null)
+                    ->placeholder('—')
+                    ->sortable()
+                    ->alignEnd()
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 TextColumn::make('first_seen_at')
                     ->label('Først set')
@@ -65,13 +107,21 @@ class ListingsTable
                 TernaryFilter::make('removed_at')
                     ->label('Status')
                     ->placeholder('Aktive')
-                    ->trueLabel('Kun fjernede')
-                    ->falseLabel('Inkluder fjernede')
+                    ->trueLabel('Kun fjernede/solgte')
+                    ->falseLabel('Inkluder alle')
                     ->queries(
-                        true: fn (Builder $q) => $q->whereNotNull('removed_at'),
+                        true: fn (Builder $q) => $q->where(fn ($q) => $q->whereNotNull('removed_at')->orWhere('availability', 'SOLD')),
                         false: fn (Builder $q) => $q,
-                        blank: fn (Builder $q) => $q->whereNull('removed_at'),
+                        blank: fn (Builder $q) => $q->whereNull('removed_at')->where(fn ($q) => $q->whereNull('availability')->orWhere('availability', '!=', 'SOLD')),
                     ),
+
+                SelectFilter::make('source')
+                    ->label('Kilde')
+                    ->options([
+                        'bmcleasing' => 'BMC',
+                        'ayvens' => 'Ayvens',
+                        'oscar' => 'Oscar',
+                    ]),
 
                 SelectFilter::make('make')
                     ->label('Mærke')

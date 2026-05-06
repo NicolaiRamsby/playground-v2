@@ -13,6 +13,7 @@ class Listing extends Model
         'first_seen_at' => 'datetime',
         'last_seen_at' => 'datetime',
         'removed_at' => 'datetime',
+        'available_from' => 'date',
     ];
 
     public function scopeActive($query)
