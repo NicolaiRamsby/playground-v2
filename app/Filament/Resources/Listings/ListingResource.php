@@ -16,11 +16,11 @@ class ListingResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
-    protected static ?string $navigationLabel = 'BMC biler';
+    protected static ?string $navigationLabel = 'Biler';
 
-    protected static ?string $modelLabel = 'BMC bil';
+    protected static ?string $modelLabel = 'bil';
 
-    protected static ?string $pluralModelLabel = 'BMC biler';
+    protected static ?string $pluralModelLabel = 'Biler';
 
     /**
      * Mærker der skjules fra listen som standard (case-insensitive). De synkes stadig til databasen.
@@ -46,7 +46,9 @@ class ListingResource extends Resource
 
     public static function getNavigationBadge(): ?string
     {
-        $query = Listing::query()->whereNull('removed_at');
+        $query = Listing::query()
+            ->whereNull('removed_at')
+            ->where(fn ($q) => $q->whereNull('availability')->orWhere('availability', '!=', 'SOLD'));
 
         if (! empty(self::HIDDEN_MAKES)) {
             $query->whereRaw(

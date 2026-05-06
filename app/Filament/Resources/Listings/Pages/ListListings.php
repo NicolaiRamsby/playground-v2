@@ -28,10 +28,14 @@ class ListListings extends ListRecords
                 ->icon('heroicon-o-arrow-path')
                 ->action(function () {
                     Artisan::call('scrape:bmc-leasing');
+                    $bmcOutput = Artisan::output();
+
+                    Artisan::call('scrape:ayvens');
+                    $ayvensOutput = Artisan::output();
 
                     Notification::make()
                         ->title('Scraping kørt')
-                        ->body(Artisan::output())
+                        ->body("BMC:\n{$bmcOutput}\nAyvens:\n{$ayvensOutput}")
                         ->success()
                         ->send();
                 }),
