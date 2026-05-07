@@ -12,11 +12,14 @@ class ListingSlackNotifier
      * Kriterier der udløser en Slack-notifikation når en NY listing dukker op.
      * source = null betyder alle kilder.
      *
-     * @var array<int, array{source?: string, make: string, model?: string, min_year?: int, label: string}>
+     * @var array<int, array{source?: string, make: string, model?: string, model_prefix?: string, min_year?: int, label: string}>
      */
     private const NOTIFY_ON_NEW = [
         ['source' => 'bmcleasing', 'make' => 'Cupra', 'model' => 'Born', 'label' => 'Cupra Born'],
         ['source' => 'bmcleasing', 'make' => 'Tesla', 'label' => 'Tesla'],
+        ['source' => 'bmcleasing', 'make' => 'Renault', 'model_prefix' => '5 ', 'label' => 'Renault 5'],
+        ['source' => 'ayvens', 'make' => 'Renault', 'model_prefix' => '5 ', 'label' => 'Renault 5'],
+        ['source' => 'oscar', 'make' => 'Renault', 'model_prefix' => '5 ', 'label' => 'Renault 5'],
         ['source' => 'ayvens', 'make' => 'Tesla', 'model' => 'Model 3', 'min_year' => 2024, 'label' => 'Tesla Model 3 (ny)'],
         ['source' => 'oscar', 'make' => 'Tesla', 'min_year' => 2024, 'label' => 'Tesla (Oscar abonnement)', 'max_days_until_available' => 45],
     ];
@@ -55,6 +58,10 @@ class ListingSlackNotifier
             }
 
             if (isset($criteria['model']) && strcasecmp((string) $listing->model, $criteria['model']) !== 0) {
+                continue;
+            }
+
+            if (isset($criteria['model_prefix']) && stripos((string) $listing->model, $criteria['model_prefix']) !== 0) {
                 continue;
             }
 

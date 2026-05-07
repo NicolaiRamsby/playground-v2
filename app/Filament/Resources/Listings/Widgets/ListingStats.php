@@ -9,11 +9,11 @@ use Filament\Widgets\StatsOverviewWidget\Stat;
 class ListingStats extends StatsOverviewWidget
 {
     /**
-     * @var array<string, array{make: string, model?: string}>
+     * @var array<string, array{make: string, model?: string, model_prefix?: string}>
      */
     private const WATCHED = [
         'Cupra Born' => ['make' => 'Cupra', 'model' => 'Born'],
-        'Audi A1' => ['make' => 'Audi', 'model' => 'A1'],
+        'Renault 5' => ['make' => 'Renault', 'model_prefix' => '5 '],
         'Tesla' => ['make' => 'Tesla'],
     ];
 
@@ -31,6 +31,10 @@ class ListingStats extends StatsOverviewWidget
 
                 if (isset($criteria['model'])) {
                     $query->where('model', $criteria['model']);
+                }
+
+                if (isset($criteria['model_prefix'])) {
+                    $query->where('model', 'like', $criteria['model_prefix'].'%');
                 }
 
                 $count = $query->count();
